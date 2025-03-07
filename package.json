@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@ignite-ui/react": "^2.2.4",
+    "@phosphor-icons/react": "^2.1.7",
     "next": "15.1.7",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

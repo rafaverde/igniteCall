@@ -9,7 +9,7 @@ import { z } from "zod";
 const claimUsernameFormSchema = z.object({
   username: z
     .string()
-    .min(3, { message: "Nome do usuário dever ter mais de 3 letras." })
+    .min(3, { message: "Nome do usuário deve ter mais de 3 letras." })
     .regex(/^([a-z\\-]+)$/i, {
       message: "Nome do usuário só pode conter letras e hifens.",
     })
@@ -35,6 +35,9 @@ export function ClaimUsernameForm() {
     <>
       <Form as="form" onSubmit={handleSubmit(handleClaimUsername)}>
         <TextInput
+          onPointerEnterCapture={undefined}
+          onPointerLeaveCapture={undefined}
+          crossOrigin={undefined}
           size={"sm"}
           prefix="ignite.com/"
           placeholder="seu-usuario"

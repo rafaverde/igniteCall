@@ -5,11 +5,12 @@ import { useForm } from "react-hook-form";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useRouter } from "next/router";
 
 const claimUsernameFormSchema = z.object({
   username: z
     .string()
-    .min(3, { message: "Nome do usuário deve ter mais de 3 letras." })
+    .min(3, { message: "Nome do usuário deve ter no mínimo 3 letras." })
     .regex(/^([a-z\\-]+)$/i, {
       message: "Nome do usuário só pode conter letras e hifens.",
     })
@@ -22,13 +23,17 @@ export function ClaimUsernameForm() {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<ClaimUsernameFormData>({
     resolver: zodResolver(claimUsernameFormSchema),
   });
 
+  const router = useRouter();
+
   async function handleClaimUsername(data: ClaimUsernameFormData) {
-    console.log(data.username);
+    const { username } = data;
+
+    await router.push(`/register?username=${username}`);
   }
 
   return (
@@ -43,7 +48,7 @@ export function ClaimUsernameForm() {
           placeholder="seu-usuario"
           {...register("username")}
         />
-        <Button size={"sm"} type="submit">
+        <Button size={"sm"} type="submit" disabled={isSubmitting}>
           Reservar
           <ArrowCircleRight />
         </Button>

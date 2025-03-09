@@ -4,11 +4,14 @@ import { ArrowCircleRight } from "@phosphor-icons/react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useRouter } from "next/router";
+import { useEffect } from "react";
+import { api } from "@/lib/axios";
 
 const registerFormSchema = z.object({
   username: z
     .string()
-    .min(3, { message: "Nome do usuário deve ter mais de 3 letras." })
+    .min(3, { message: "Nome do usuário deve ter no mínimo 3 letras." })
     .regex(/^([a-z\\-]+)$/i, {
       message: "Nome do usuário só pode conter letras e hifens.",
     })
@@ -22,13 +25,29 @@ export default function Register() {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerFormSchema),
   });
 
+  const router = useRouter();
+
+  useEffect(() => {
+    if (router.query.username) {
+      setValue("username", String(router.query.username));
+    }
+  }, [router.query?.username, setValue]);
+
   async function handleRegister(data: RegisterFormData) {
-    console.log(data);
+    try {
+      api.post("/users", {
+        name: data.name,
+        username: data.username,
+      });
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   return (

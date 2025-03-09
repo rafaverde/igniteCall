@@ -1,12 +1,16 @@
 import { Button, Heading, MultiStep, Text, TextInput } from "@ignite-ui/react";
 import { Container, Form, FormError, Header } from "./styles";
 import { ArrowCircleRight } from "@phosphor-icons/react";
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+
 import { useRouter } from "next/router";
 import { useEffect } from "react";
+
 import { api } from "@/lib/axios";
+import { AxiosError } from "axios";
 
 const registerFormSchema = z.object({
   username: z
@@ -41,12 +45,16 @@ export default function Register() {
 
   async function handleRegister(data: RegisterFormData) {
     try {
-      api.post("/users", {
+      await api.post("/users", {
         name: data.name,
         username: data.username,
       });
     } catch (error) {
-      console.log(error);
+      if (error instanceof AxiosError && error?.response?.data?.message) {
+        return alert(error.response.data.message);
+      }
+
+      console.error(error);
     }
   }
 

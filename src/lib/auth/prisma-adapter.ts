@@ -1,16 +1,57 @@
 import { Adapter } from "next-auth/adapters";
 import { prisma } from "../prisma";
+import { destroyCookie, parseCookies } from "nookies";
+import { NextApiRequest, NextApiResponse } from "next";
 
-export function PrismaAdapter(): Adapter {
+import { User } from "@prisma/client";
+
+export function PrismaAdapter(
+  req: NextApiRequest,
+  res: NextApiResponse
+): Adapter {
   return {
-    async createUser(user) {},
+    async createUser(user: User) {
+      const { "@ignitecall-v1:userId": userIdOnCookies } = parseCookies({
+        req,
+      });
+
+      if (!userIdOnCookies) {
+        throw new Error("User id not found on cookies");
+      }
+
+      const prismaUser = await prisma.user.update({
+        where: {
+          id: userIdOnCookies,
+        },
+        data: {
+          name: user.name,
+          email: user.email,
+          avatar_url: user.avatar_url,
+        },
+      });
+
+      destroyCookie({ res }, "@ignitecall-v1:userId", { path: "/" });
+
+      return {
+        id: prismaUser.id,
+        name: prismaUser.name,
+        username: prismaUser.username,
+        email: prismaUser.email!,
+        emailVerified: null,
+        avatar_url: prismaUser.avatar_url!,
+      };
+    },
 
     async getUser(id) {
-      const user = await prisma.user.findUniqueOrThrow({
+      const user = await prisma.user.findUnique({
         where: {
           id,
         },
       });
+
+      if (!user) {
+        return null;
+      }
 
       return {
         id: user.id,
@@ -23,11 +64,15 @@ export function PrismaAdapter(): Adapter {
     },
 
     async getUserByEmail(email) {
-      const user = await prisma.user.findUniqueOrThrow({
+      const user = await prisma.user.findUnique({
         where: {
           email,
         },
       });
+
+      if (!user) {
+        return null;
+      }
 
       return {
         id: user.id,
@@ -40,7 +85,7 @@ export function PrismaAdapter(): Adapter {
     },
 
     async getUserByAccount({ providerAccountId, provider }) {
-      const { user } = await prisma.account.findUniqueOrThrow({
+      const account = await prisma.account.findUnique({
         where: {
           provider_provider_account_id: {
             provider,
@@ -51,6 +96,12 @@ export function PrismaAdapter(): Adapter {
           user: true,
         },
       });
+
+      if (!account) {
+        return null;
+      }
+
+      const { user } = account;
 
       return {
         id: user.id,
@@ -85,13 +136,25 @@ export function PrismaAdapter(): Adapter {
     },
 
     //Quando o user loga por exexmplo com google e depois com outra, como github, aí linka as duas contas. Basicamente é criar uma nova account.
-    async linkAccount(account) {
+    async linkAccount(account: {
+      userId: any;
+      type: any;
+      provider: any;
+      providerAccountId: any;
+      refresh_token: any;
+      access_token: any;
+      expires_at: any;
+      token_type: any;
+      scope: any;
+      id_token: any;
+      session_state: any;
+    }) {
       await prisma.account.create({
         data: {
           user_id: account.userId,
           type: account.type,
           provider: account.provider,
-          provider_account_id: account.providerId,
+          provider_account_id: account.providerAccountId,
           refresh_token: account.refresh_token,
           access_token: account.access_token,
           expires_at: account.expires_at,
@@ -121,7 +184,7 @@ export function PrismaAdapter(): Adapter {
     },
 
     async getSessionAndUser(sessionToken) {
-      const { user, ...session } = await prisma.session.findUniqueOrThrow({
+      const prismaSession = await prisma.session.findUnique({
         where: {
           session_token: sessionToken,
         },
@@ -129,6 +192,12 @@ export function PrismaAdapter(): Adapter {
           user: true,
         },
       });
+
+      if (!prismaSession) {
+        return null;
+      }
+
+      const { user, ...session } = prismaSession;
 
       return {
         session: {
@@ -163,6 +232,14 @@ export function PrismaAdapter(): Adapter {
         userId: prismaSession.user_id,
         expires: prismaSession.expires,
       };
+    },
+
+    async deleteSession(sessionToken) {
+      await prisma.session.delete({
+        where: {
+          session_token: sessionToken,
+        },
+      });
     },
   };
 }

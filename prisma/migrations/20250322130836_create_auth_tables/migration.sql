@@ -1,15 +1,4 @@
 -- CreateTable
-CREATE TABLE "users" (
-    "id" TEXT NOT NULL PRIMARY KEY,
-    "username" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "email" TEXT,
-    "avatar_url" TEXT,
-    "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
--- CreateTable
 CREATE TABLE "accounts" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "user_id" TEXT NOT NULL,
@@ -39,21 +28,25 @@ CREATE TABLE "sessions" (
     CONSTRAINT "sessions_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
--- CreateTable
-CREATE TABLE "user_time_intervals" (
+-- RedefineTables
+PRAGMA defer_foreign_keys=ON;
+PRAGMA foreign_keys=OFF;
+CREATE TABLE "new_users" (
     "id" TEXT NOT NULL PRIMARY KEY,
-    "week_day" INTEGER NOT NULL,
-    "time_start_in_minutes" INTEGER NOT NULL,
-    "time_end_in_minutes" INTEGER NOT NULL,
-    "user_id" TEXT NOT NULL,
-    CONSTRAINT "user_time_intervals_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+    "username" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "email" TEXT,
+    "avatar_url" TEXT,
+    "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
-
--- CreateIndex
+INSERT INTO "new_users" ("created_at", "id", "name", "username") SELECT "created_at", "id", "name", "username" FROM "users";
+DROP TABLE "users";
+ALTER TABLE "new_users" RENAME TO "users";
 CREATE UNIQUE INDEX "users_username_key" ON "users"("username");
-
--- CreateIndex
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
+PRAGMA foreign_keys=ON;
+PRAGMA defer_foreign_keys=OFF;
 
 -- CreateIndex
 CREATE UNIQUE INDEX "accounts_provider_provider_account_id_key" ON "accounts"("provider", "provider_account_id");

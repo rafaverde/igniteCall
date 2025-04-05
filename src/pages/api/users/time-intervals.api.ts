@@ -8,7 +8,7 @@ const timeIntervalsBodySchema = z.object({
   intervals: z.array(
     z.object({
       weekDay: z.number(),
-      starTimeInMinutes: z.number(),
+      startTimeInMinutes: z.number(),
       endTimeInMinutes: z.number(),
     })
   ),
@@ -39,7 +39,7 @@ export default async function handler(
       return prisma.userTimeIntervals.create({
         data: {
           week_day: interval.weekDay,
-          time_start_in_minutes: interval.starTimeInMinutes,
+          time_start_in_minutes: interval.startTimeInMinutes,
           time_end_in_minutes: interval.endTimeInMinutes,
           user_id: session.user?.id,
         },

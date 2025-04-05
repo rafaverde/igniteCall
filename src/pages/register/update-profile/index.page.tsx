@@ -7,6 +7,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { FormAnnotation, ProfileBox } from "./styles";
 import { useSession } from "next-auth/react";
+import { GetServerSideProps } from "next";
+import { getServerSession } from "next-auth";
+import { buildNextAuthOptions } from "@/pages/api/auth/[...nextauth].api";
 
 const updateProfileFormSchema = z.object({
   bio: z.string(),
@@ -64,3 +67,13 @@ export default function UpdateProfile() {
     </Container>
   );
 }
+
+export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
+  const session = await getServerSession(
+    req,
+    res,
+    buildNextAuthOptions(req, res)
+  );
+
+  return { props: { session } };
+};

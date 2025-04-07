@@ -1,4 +1,11 @@
-import { Button, Heading, MultiStep, Text, TextArea } from "@ignite-ui/react";
+import {
+  Avatar,
+  Button,
+  Heading,
+  MultiStep,
+  Text,
+  TextArea,
+} from "@ignite-ui/react";
 import { Container, Header } from "../styles";
 import { ArrowCircleRight } from "@phosphor-icons/react";
 
@@ -29,8 +36,6 @@ export default function UpdateProfile() {
 
   const session = useSession();
 
-  console.log(session);
-
   async function handleUpdateProfile(data: UpdateProfileData) {}
 
   return (
@@ -48,6 +53,10 @@ export default function UpdateProfile() {
       <ProfileBox as="form" onSubmit={handleSubmit(handleUpdateProfile)}>
         <label>
           <Text size="sm">Foto de perfil</Text>
+          <Avatar
+            src={session.data?.user.avatar_url}
+            alt={session.data?.user.name}
+          />
         </label>
 
         <label>

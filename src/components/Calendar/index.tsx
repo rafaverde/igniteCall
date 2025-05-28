@@ -10,6 +10,9 @@ import {
 import { getWeekDays } from "@/utils/get-week-days";
 import { useMemo, useState } from "react";
 import dayjs from "dayjs";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/axios";
+import { useRouter } from "next/router";
 
 interface CalendarWeek {
   week: number;
@@ -20,6 +23,10 @@ interface CalendarWeek {
 }
 
 type CalendarWeeks = CalendarWeek[];
+
+interface BlockedDates {
+  blockedWeekDays: number[];
+}
 
 interface CalendarProps {
   selectedDate: Date | null;
@@ -46,7 +53,33 @@ export function Calendar({ selectedDate, onDateSelected }: CalendarProps) {
 
   const shortWeekDays = getWeekDays({ short: true });
 
+  const router = useRouter();
+  const username = String(router.query.username);
+
+  const { data: blockedDates } = useQuery<BlockedDates>({
+    queryKey: [
+      "blocked-dates",
+      currentDate.get("year"),
+      currentDate.get("month"),
+    ],
+    queryFn: async () => {
+      const response = await api.get(`/users/${username}/blocked-dates`, {
+        params: {
+          year: currentDate.get("year"),
+          month: currentDate.get("month"),
+        },
+      });
+
+      return response.data;
+    },
+    enabled: !!selectedDate,
+  });
+
   const calendarWeeks = useMemo(() => {
+    if (!blockedDates) {
+      return [];
+    }
+
     const daysInMonthArray = Array.from({
       length: currentDate.daysInMonth(),
     }).map((_, i) => {
@@ -81,7 +114,12 @@ export function Calendar({ selectedDate, onDateSelected }: CalendarProps) {
         return { date, disabled: true };
       }),
       ...daysInMonthArray.map((date) => {
-        return { date, disabled: date.endOf("day").isBefore(new Date()) };
+        return {
+          date,
+          disabled:
+            date.endOf("day").isBefore(new Date()) ||
+            blockedDates.blockedWeekDays.includes(date.get("day")),
+        };
       }),
       ...nextMonthFillArray.map((date) => {
         return { date, disabled: true };
@@ -105,7 +143,7 @@ export function Calendar({ selectedDate, onDateSelected }: CalendarProps) {
     );
 
     return calendarWeeks;
-  }, [currentDate]);
+  }, [currentDate, blockedDates]);
 
   return (
     <CalendarContainer>

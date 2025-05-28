@@ -16,7 +16,7 @@ export default async function handle(
   // Recupera a data do parametro da url
   const { date } = req.query;
 
-  // Se nõa houver data, retorna erro
+  // Se não houver data, retorna erro
   if (!date) {
     return res.status(400).json({ message: "Date not provided." });
   }

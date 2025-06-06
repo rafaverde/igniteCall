@@ -81,9 +81,13 @@ export default async function handle(
 
   // Filtra em possibleTimes todos os valores que não estão em blockedTimes e retorna um novo array
   const availableTimes = possibleTimes.filter((time) => {
-    return !blockedTimes.some(
+    const isTimeBlocked = !blockedTimes.some(
       (blockedTime) => blockedTime.date.getHours() === time
     );
+
+    const isTimeInPast = referenceDate.set("hour", time).isBefore(new Date());
+
+    return !isTimeBlocked && !isTimeInPast;
   });
 
   return res.json({ possibleTimes, availableTimes });
